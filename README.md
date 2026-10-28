@@ -7,7 +7,7 @@ Linux fan control and system monitoring for the **Sixunited AXB35-02** embedded 
 > **Driver credits:** [Cmetz](https://github.com/cmetz) – original `ec-su_axb35-linux` kernel module · [eschaubert](https://github.com/eschaubert/ec-su_axb35-linux) – hwmon integration.
 > This fork adds an all-in-one **system monitor + fan configuration GUI** and **boot persistence** on top of the base driver.
 
-More info: [Strix Halo Homelab Wiki](https://strixhalo-homelab.d7.wtf/Hardware/Boards/Sixunited-AXB35) · [Power Mode & Fan Control Guide](https://strixhalo-homelab.d7.wtf/Guides/Power-Mode-and-Fan-Control)
+More info: [Strix Halo Wiki](https://strixhalo.wiki/Hardware/Boards/Sixunited_AXB35/) · [Power Mode & Fan Control Guide](https://strixhalo.wiki/Guides/Sixunited_AXB35/Power_Mode_and_Fan_Control/)
 
 ---
 

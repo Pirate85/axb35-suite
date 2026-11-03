@@ -19,6 +19,7 @@ import threading
 import tkinter as tk
 
 # ─── Config-Pfad (Zoom, Fensterposition – überlebt Neustarts) ─────────────
+VERSION     = "1.2"
 CONFIG_DIR  = os.path.expanduser("~/.config/axb35-monitor")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
@@ -87,7 +88,7 @@ T = {
         'fan2': 'CPU Lüfter 2',
         'fan3': 'System-Lüfter',
         'not_connected': 'nicht angeschlossen',
-        'zoom_hint': 'Strg +/- :Zoom · Strg 0 :Reset · ',
+        'zoom_hint': 'Strg +/- : Zoom · Strg 0 : Reset · ',
         # Config-GUI
         'cfg_title': 'Lüfter-Config',
         'cfg_cpu_fan': 'CPU-Kühler (Fan 1+2)',
@@ -109,7 +110,7 @@ T = {
         'fan2': 'CPU Fan 2',
         'fan3': 'System Fan',
         'not_connected': 'not connected',
-        'zoom_hint': 'Ctrl +/- :Zoom · Ctrl 0 :Reset · ',
+        'zoom_hint': 'Ctrl +/- : Zoom · Ctrl 0 : Reset · ',
         # Config-GUI
         'cfg_title': 'Fan Config',
         'cfg_cpu_fan': 'CPU Cooler (Fan 1+2)',
@@ -230,6 +231,34 @@ def get_vram_usage():
     pct = int(100 * used_raw / total_raw) if total_raw > 0 else 0
     return {'pct': pct, 'used_gb': round(used_raw/(1024**3), 1),
             'total_gb': round(total_raw/(1024**3), 1)}
+
+
+def get_cpu_freq_ghz():
+    """Aktuelle CPU-Taktrate in GHz (aus cpufreq sysfs). Liefert float oder None."""
+    # cpu0 als Referenz (alle Cores teilen sich beim Strix Halo die Freq)
+    raw = read_int("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+    if raw is not None and raw > 0:
+        return round(raw / 1_000_000.0, 2)  # kHz → GHz
+    return None
+
+
+def get_gpu_freq_ghz():
+    """Aktuelle GPU-Taktrate in GHz (aus amdgpu pp_dpm_sclk). Liefert float oder None."""
+    # Format: "0: 600Mhz \n1: 1655Mhz *\n2: 2900Mhz \n" – aktive Stufe hat '*'
+    raw = read_sysfs(f"{DRM_DEVICE}/pp_dpm_sclk")
+    if raw is None:
+        return None
+    for line in raw.splitlines():
+        if '*' in line:
+            try:
+                # Format: "1: 1636Mhz *" → nach ':' und vor 'Mhz' extrahieren
+                mhz_str = line.split(':')[1].split('Mhz')[0].strip()
+                mhz = int(mhz_str)
+                if mhz > 0:
+                    return round(mhz / 1000.0, 2)
+            except (ValueError, IndexError):
+                continue
+    return None
 
 
 def find_ext_mountpoint():
@@ -1008,7 +1037,7 @@ class SystemMonitorApp:
         w = max(360, int(base_w * saved_scale))
         h = max(240, int(base_h * saved_scale))
         self.root.geometry(f"{w}x{h}")
-        self.root.minsize(max(320, int(500 * saved_scale)), max(200, int(320 * saved_scale)))
+        self.root.minsize(max(500, int(690 * saved_scale)), max(260, int(445 * saved_scale)))
 
         # Position: gespeichert oder zentriert
         if saved_x is not None and saved_y is not None:
@@ -1295,7 +1324,7 @@ class SystemMonitorApp:
         self._reg(self.status_text, "Segoe UI", 9)
 
         # Rechts: Zoom-Legende + aktueller % (ein Label wie MTP)
-        self.zoom_pct_lbl = tk.Label(inner, text=f"{T[LANG]['zoom_hint']}100%",
+        self.zoom_pct_lbl = tk.Label(inner, text=f"{T[LANG]['zoom_hint']}100% · v{VERSION}",
                                      font=("Segoe UI", 8), bg=C_SURFACE, fg=C_DIM)
         self.zoom_pct_lbl.pack(side=tk.RIGHT, padx=(0, 4))
         self._reg(self.zoom_pct_lbl, "Segoe UI", 8)
@@ -1337,7 +1366,7 @@ class SystemMonitorApp:
 
         # Zoom-% in der Bottom-Bar aktualisieren
         try:
-            self.zoom_pct_lbl.config(text=f"{T[LANG]['zoom_hint']}{int(self.scale * 100)}%")
+            self.zoom_pct_lbl.config(text=f"{T[LANG]['zoom_hint']}{int(self.scale * 100)}% · v{VERSION}")
         except tk.TclError:
             pass
 
@@ -1415,11 +1444,16 @@ class SystemMonitorApp:
             self.ext_temp_lbl.config(text="--°C", fg=C_DIM)
             self.ext_temp_sub.config(text=T[LANG]['not_connected'])
 
-        # Auslastungsbalken
-        self._update_bar(self.usage_w['cpu'],  data.get('cpu_pct'),
-                         f"{data.get('cpu_pct', '--')}%")
-        self._update_bar(self.usage_w['gpu'],  data.get('gpu_pct'),
-                         f"{data.get('gpu_pct', '--')}%")
+        # Auslastungsbalken (CPU & GPU mit Taktrate)
+        cpu_txt = f"{data.get('cpu_pct', '--')}%"
+        if data.get('cpu_ghz') is not None:
+            cpu_txt += f" · {data['cpu_ghz']} GHz"
+        self._update_bar(self.usage_w['cpu'], data.get('cpu_pct'), cpu_txt)
+
+        gpu_txt = f"{data.get('gpu_pct', '--')}%"
+        if data.get('gpu_ghz') is not None:
+            gpu_txt += f" · {data['gpu_ghz']} GHz"
+        self._update_bar(self.usage_w['gpu'], data.get('gpu_pct'), gpu_txt)
 
         if data.get('ram_pct') is not None:
             txt = (f"{data.get('ram_used_gb', '?')} / "
@@ -1539,15 +1573,17 @@ class SystemMonitorApp:
                 data['ext_temp']  = ext['temp']
                 data['ext_model'] = ext.get('model', 'Ext. SSD')
 
-            # CPU-Auslastung (Delta aus /proc/stat)
+            # CPU-Auslastung (Delta aus /proc/stat) + Taktrate
             cpu_pct, self._prev_cpu_stat = get_cpu_usage(self._prev_cpu_stat)
             if cpu_pct is not None:
                 data['cpu_pct'] = cpu_pct
+            data['cpu_ghz'] = get_cpu_freq_ghz()
 
-            # GPU-Auslastung
+            # GPU-Auslastung + Taktrate
             gpu_busy = read_int(f"{DRM_DEVICE}/gpu_busy_percent")
             if gpu_busy is not None:
                 data['gpu_pct'] = gpu_busy
+            data['gpu_ghz'] = get_gpu_freq_ghz()
 
             # RAM
             ram = get_ram_usage()

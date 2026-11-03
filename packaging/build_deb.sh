@@ -3,8 +3,8 @@
 #  build_deb.sh – Erzeugt .deb-Pakete für axb35-suite
 #  
 #  Aufruf:   bash packaging/build_deb.sh [all|standard|mok]
-#  Output:   dist/axb35-suite_1.1-1_amd64.deb
-#            dist/axb35-suite-mok_1.1-1_amd64.deb
+#  Output:   dist/axb35-suite_1.2_amd64.deb
+#            dist/axb35-suite-mok_1.2_amd64.deb
 # ═══════════════════════════════════════════════════════════
 set -euo pipefail
 
@@ -15,7 +15,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 BUILD_TMP="/tmp/ec-deb-build-$$"
 
 PKG_NAME="axb35-suite"
-PKG_VERSION="1.1-1"
+PKG_VERSION="1.2"
 ARCH="amd64"
 
 # ─── Farben ──────────────────────────────────────────────
@@ -132,10 +132,10 @@ main() {
     ok "All done! Packages in: ${DIST_DIR}/"
     echo ""
     echo "  Install (Standard / Secure Boot OFF):"
-    echo "    sudo dpkg -i ${DIST_DIR}/axb35-suite_1.1-1_amd64.deb"
+    echo "    sudo dpkg -i ${DIST_DIR}/${PKG_NAME}_${PKG_VERSION}_${ARCH}.deb"
     echo ""
     echo "  Install (MOK / Secure Boot ON):"
-    echo "    sudo dpkg -i ${DIST_DIR}/axb35-suite-mok_1.1-1_amd64.deb"
+    echo "    sudo dpkg -i ${DIST_DIR}/${PKG_NAME}-mok_${PKG_VERSION}_${ARCH}.deb"
     echo "    sudo reboot   ← MOK enrollment screen appears"
 }
 

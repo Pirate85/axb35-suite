@@ -80,7 +80,7 @@ cp ./python-gui/axb35-monitor.desktop ~/.local/share/applications/
 | Area | Details |
 |------|---------|
 | Temperatures | CPU · GPU (Radeon 8060S iGPU) · NVMe ×2 (internal) · external USB SSD |
-| Usage bars | CPU % · GPU % · RAM · VRAM · disk space · ext. SSD usage |
+| Usage bars | CPU % + GHz · GPU % + GHz · RAM · VRAM · NVMe ×2 disk space · ext. SSD usage |
 | Fans | 3× RPM + mode badge (auto / fixed / curve) + activity bar |
 | Config panel | ⚙️ button → per-fan mode, level 0–5, ramp-up/down curves, APU power mode |
 | Persistence | **Apply** writes sysfs immediately + creates/enables `fancontrol.service` (survives reboot) |
@@ -163,4 +163,38 @@ echo "$USER ALL=(root) NOPASSWD: /bin/sh"           | sudo tee /etc/sudoers.d/ax
 
 ---
 
-*Last updated: 20.10.2026*
+## Deinstallation
+
+To completely remove axb35-suite (driver + GUI + persistence):
+
+```bash
+# Standard variant (Secure Boot off):
+sudo apt purge axb35-suite -y
+
+# MOK / Secure Boot variant:
+sudo apt purge axb35-suite-mok -y
+```
+
+This automatically handles everything via the package scripts (`prerm` + `postrm`):
+- Unloads the kernel module
+- Removes DKMS source + compiled module
+- Deletes `fancontrol.service`, auto-load config, desktop entry & sudoers rules
+
+**Verify clean removal:**
+```bash
+lsmod | grep ec_su_axb35          # → (empty)
+dpkg -l axb35-suite               # → "not installed"
+systemctl status fancontrol       # → not found
+```
+
+> **Installed manually via DKMS scripts?** If you set up the driver using `contrib/ubuntu/` without the .deb package, remove it manually:
+> ```bash
+> sudo dkms remove ec_su_axb35/1.1 --all
+> sudo rm -f /etc/modules-load.d/ec_su_axb35.conf
+> sudo systemctl disable --now fancontrol 2>/dev/null; sudo rm -f /etc/systemd/system/fancontrol.service
+> sudo rm -f /usr/local/bin/axb35-system-monitor
+> ```
+
+---
+
+*Last updated: 03.11.2026*

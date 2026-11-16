@@ -45,6 +45,23 @@ ls /sys/class/ec_su_axb35/        # expected: fan1/ fan2/ fan3/ temp1/ apu/
 cat /sys/class/ec_su_axb35/fan1/rpm
 ```
 
+
+### Fedora / RPM alternative
+
+Pre-built `.rpm` packages are available from the [GitHub Releases](https://github.com/Pirate85/axb35-suite/releases). No build required:
+
+```bash
+# Download from the release page, then install:
+sudo dnf install ./axb35-suite-1.2-1.fc.x86_64.rpm
+
+# Secure Boot (MOK) variant:
+sudo dnf install ./axb35-suite-mok-1.2-1.fc.x86_64.rpm
+```
+
+This handles DKMS setup, auto-load config, and desktop entry automatically – same as the `.deb`.
+
+> **Note:** The manual steps above (DKMS + modules-load) are only needed if you're building from source without a package manager.
+
 ---
 
 ## Boot persistence (module + fan curves)
@@ -167,6 +184,8 @@ echo "$USER ALL=(root) NOPASSWD: /bin/sh"           | sudo tee /etc/sudoers.d/ax
 
 To completely remove axb35-suite (driver + GUI + persistence):
 
+**Ubuntu / Debian:**
+
 ```bash
 # Standard variant (Secure Boot off):
 sudo apt purge axb35-suite -y
@@ -180,7 +199,12 @@ This automatically handles everything via the package scripts (`prerm` + `postrm
 - Removes DKMS source + compiled module
 - Deletes `fancontrol.service`, auto-load config, desktop entry & sudoers rules
 
-**Verify clean removal:**
+```bash
+# Fedora / RPM:
+sudo dnf remove axb35-suite        # or: sudo dnf remove axb35-suite-mok
+```
+
+**Verify clean removal (all distros):**
 ```bash
 lsmod | grep ec_su_axb35          # → (empty)
 dpkg -l axb35-suite               # → "not installed"

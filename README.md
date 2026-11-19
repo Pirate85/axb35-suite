@@ -5,7 +5,7 @@ Linux fan control and system monitoring for the **Sixunited AXB35-02** embedded 
 **Compatible hardware:** GMKtec EVO-X2 · Bosgame M5 · FEVM FA-EX9 · Peladn YO1 · NIMO AI MiniPC · Corsair AI Workstation 300
 
 > **Driver credits:** [Cmetz](https://github.com/cmetz) – original `ec-su_axb35-linux` kernel module · [eschaubert](https://github.com/eschaubert/ec-su_axb35-linux) – hwmon integration.
-> This fork adds an all-in-one **system monitor + fan configuration GUI** and **boot persistence** on top of the base driver.
+> This fork adds an all-in-one **system monitor + fan configuration GUI**, **udev permissions**, and **boot persistence** on top of the base driver.
 
 More info: [Strix Halo Wiki](https://strixhalo.wiki/Hardware/Boards/Sixunited_AXB35/) · [Power Mode & Fan Control Guide](https://strixhalo.wiki/Guides/Sixunited_AXB35/Power_Mode_and_Fan_Control/)
 
@@ -45,6 +45,21 @@ ls /sys/class/ec_su_axb35/        # expected: fan1/ fan2/ fan3/ temp1/ apu/
 cat /sys/class/ec_su_axb35/fan1/rpm
 ```
 
+
+### Debian / Ubuntu (`.deb` – recommended)
+
+Pre-built `.deb` packages are available from the [GitHub Releases](https://github.com/Pirate85/axb35-suite/releases):
+
+```bash
+# Standard variant (Secure Boot OFF):
+sudo apt install ./axb35-suite_1.2_amd64.deb
+
+# Secure Boot (MOK) variant:
+sudo apt install ./axb35-suite-mok_1.2_amd64.deb
+sudo reboot   # → blue MOK screen → "Enroll MOK"
+```
+
+This automatically sets up DKMS compilation, kernel module auto-load, the udev rule (`/etc/udev/rules.d/99-ec-su-axb35.rules`) for non-root GUI fan curve writes, desktop integration, and immediate `fancontrol.service` activation.
 
 ### Fedora / RPM alternative
 
@@ -123,17 +138,13 @@ cp ./python-gui/axb35-monitor.desktop ~/.local/share/applications/
 
 > **Apply** = takes effect immediately + persists to `/etc/systemd/system/fancontrol.service`. If the service doesn't exist yet, it is created and enabled automatically.
 
-### Optional: passwordless sudo (comfort)
-Without these rules everything still works – you just get a password prompt where noted.
+### Permissions & optional passwordless sudo
+- **Fan curves (`Config Panel → Apply`):** Both the `.deb` and `.rpm` packages install `/etc/udev/rules.d/99-ec-su-axb35.rules`, granting non-root write access to `/sys/devices/virtual/ec_su_axb35/fan*`. A password prompt only appears once when creating/enabling `fancontrol.service` for the first time.
+- **External USB SSD temperature (optional):** If you want live SMART temperatures for an external USB drive without a password prompt:
 
 ```bash
-# External USB SSD temperature (smartctl SMART reads):
 echo "$USER ALL=(root) NOPASSWD: /usr/sbin/smartctl" | sudo tee /etc/sudoers.d/axb35-smartctl
-
-# Config Panel “Apply” (write sysfs + manage the service):
-echo "$USER ALL=(root) NOPASSWD: /bin/sh"           | sudo tee /etc/sudoers.d/axb35-fanconfig
 ```
-> Both rules are scoped – they grant only `smartctl` and `/bin/sh` (used by the Apply helper), not general root.
 
 ---
 
@@ -197,7 +208,7 @@ sudo apt purge axb35-suite-mok -y
 This automatically handles everything via the package scripts (`prerm` + `postrm`):
 - Unloads the kernel module
 - Removes DKMS source + compiled module
-- Deletes `fancontrol.service`, auto-load config, desktop entry & sudoers rules
+- Deletes `fancontrol.service`, udev rule (`99-ec-su-axb35.rules`), auto-load config & desktop entry
 
 ```bash
 # Fedora / RPM:
@@ -221,4 +232,4 @@ systemctl status fancontrol       # → not found
 
 ---
 
-*Last updated: 03.11.2026*
+*Last updated: 19.11.2026*

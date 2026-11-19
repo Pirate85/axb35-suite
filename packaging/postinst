@@ -73,7 +73,7 @@ systemctl enable fancontrol.service --quiet 2>/dev/null || true
 echo "  Service enabled (will apply curves at boot)."
 
 # 5) Desktop entry
-desktop_file="/usr/share/applications/ec-su_axb35-linux.desktop"
+desktop_file="/usr/share/applications/axb35-suite.desktop"
 cat > "$desktop_file" << 'EOF'
 [Desktop Entry]
 Type=Application

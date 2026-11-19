@@ -108,7 +108,7 @@ echo "ec_su_axb35" > /etc/modules-load.d/ec_su_axb35.conf
 modprobe ec_su_axb35 2>/dev/null || true
 
 if [ -f /etc/systemd/system/fancontrol.service ]; then
-    systemctl enable fancontrol 2>/dev/null || true
+    systemctl enable --now fancontrol 2>/dev/null || true
 fi
 cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
 SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"
@@ -160,7 +160,7 @@ echo "ec_su_axb35" > /etc/modules-load.d/ec_su_axb35.conf
 modprobe ec_su_axb35 2>/dev/null || true
 
 if [ -f /etc/systemd/system/fancontrol.service ]; then
-    systemctl enable fancontrol 2>/dev/null || true
+    systemctl enable --now fancontrol 2>/dev/null || true
 fi
 cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
 SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"

@@ -91,7 +91,7 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable fancontrol.service --quiet 2>/dev/null || true
+systemctl enable --now fancontrol.service --quiet 2>/dev/null || true
 
 # Desktop entry
 # 5b) udev rule for non-root GUI fan curve control

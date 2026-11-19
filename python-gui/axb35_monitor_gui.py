@@ -26,7 +26,15 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 # ─── Konfiguration ────────────────────────────────────────────────────────
 BASE_PATH     = "/sys/class/ec_su_axb35"
-DRM_DEVICE    = "/sys/class/drm/card1/device"       # amdgpu (Radeon 8060S iGPU)
+def _find_drm_device():
+    for entry in sorted(os.listdir("/sys/class/drm")):
+        if entry.startswith("card") and "-" not in entry:
+            dev = f"/sys/class/drm/{entry}/device"
+            if os.path.exists(f"{dev}/gpu_busy_percent"):
+                return dev
+    return "/sys/class/drm/card0/device"
+
+DRM_DEVICE    = _find_drm_device()                  # amdgpu (Radeon 8060S iGPU)
 UPDATE_INTERVAL = 1.5          # Sekunden zwischen Aktualisierungen
 
 # hwmon-Indizes werden dynamisch per Name aufgelöst (robust gegen Reordering!)

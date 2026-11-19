@@ -1037,7 +1037,7 @@ class SystemMonitorApp:
         w = max(360, int(base_w * saved_scale))
         h = max(240, int(base_h * saved_scale))
         self.root.geometry(f"{w}x{h}")
-        self.root.minsize(max(500, int(690 * saved_scale)), max(260, int(445 * saved_scale)))
+        self.root.minsize(420, 260)
 
         # Position: gespeichert oder zentriert
         if saved_x is not None and saved_y is not None:

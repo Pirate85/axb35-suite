@@ -6,3 +6,4 @@ Exec=/usr/local/bin/axb35-system-monitor
 Icon=axb35-suite
 Terminal=false
 Categories=System;Monitor;
+X-GNOME-Autostart-Delay=2

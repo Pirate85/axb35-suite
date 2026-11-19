@@ -72,6 +72,13 @@ systemctl daemon-reload
 systemctl enable fancontrol.service --quiet 2>/dev/null || true
 echo "  Service enabled (will apply curves at boot)."
 
+# 4b) udev rule for non-root GUI fan curve control
+cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
+SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"
+UDEV_EOF
+udevadm control --reload-rules 2>/dev/null || true
+chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan* 2>/dev/null || true
+
 # 5) Desktop entry
 desktop_file="/usr/share/applications/axb35-suite.desktop"
 cat > "$desktop_file" << 'EOF'

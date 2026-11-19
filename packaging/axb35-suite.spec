@@ -110,6 +110,11 @@ modprobe ec_su_axb35 2>/dev/null || true
 if [ -f /etc/systemd/system/fancontrol.service ]; then
     systemctl enable fancontrol 2>/dev/null || true
 fi
+cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
+SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"
+UDEV_EOF
+udevadm control --reload-rules 2>/dev/null || true
+chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan* 2>/dev/null || true
 systemctl daemon-reload 2>/dev/null || true
 
 echo "[axb35-suite] Install complete. Launch 'Axb35-monitor' from your app menu."
@@ -129,6 +134,8 @@ if [ $1 -eq 0 ]; then
         systemctl disable fancontrol 2>/dev/null || true
         rm -f /etc/systemd/system/fancontrol.service
     fi
+    rm -f /etc/udev/rules.d/99-ec-su-axb35.rules
+    udevadm control --reload-rules 2>/dev/null || true
     systemctl daemon-reload 2>/dev/null || true
 fi
 
@@ -155,6 +162,11 @@ modprobe ec_su_axb35 2>/dev/null || true
 if [ -f /etc/systemd/system/fancontrol.service ]; then
     systemctl enable fancontrol 2>/dev/null || true
 fi
+cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
+SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"
+UDEV_EOF
+udevadm control --reload-rules 2>/dev/null || true
+chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan* 2>/dev/null || true
 systemctl daemon-reload 2>/dev/null || true
 
 echo ""
@@ -176,12 +188,14 @@ if [ $1 -eq 0 ]; then
         systemctl disable fancontrol 2>/dev/null || true
         rm -f /etc/systemd/system/fancontrol.service
     fi
+    rm -f /etc/udev/rules.d/99-ec-su-axb35.rules
+    udevadm control --reload-rules 2>/dev/null || true
     systemctl daemon-reload 2>/dev/null || true
 fi
 
 %changelog
-* Thu Nov 16 2026 Pirate85 <Pirate85@web.de> - 1.2-1
+* Mon Nov 16 2026 Pirate85 <Pirate85@web.de> - 1.2-1
 - Initial RPM packaging (Fedora support)
 - GUI: CPU/GPU clock rate display in usage bars
-* Tue Oct 28 2026 Pirate85 <Pirate85@web.de> - 1.1-1
+* Wed Oct 28 2026 Pirate85 <Pirate85@web.de> - 1.1-1
 - v1.1 initial release (DEB)

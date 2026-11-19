@@ -20,6 +20,9 @@ case "$1" in
         rm -rf /etc/dkms/mok 2>/dev/null || true
         rm -f /etc/dkms/framework.conf.d/ec_su_axb35 2>/dev/null || true
 
+        rm -f /etc/udev/rules.d/99-ec-su-axb35.rules
+        udevadm control --reload-rules 2>/dev/null || true
+
         echo "[4/4] Cleaning up..."
         # NOTE: /usr/local/bin/axb35-system-monitor und .desktop werden von dpkg selbst entfernt!
         update-desktop-database /usr/share/applications 2>/dev/null || true

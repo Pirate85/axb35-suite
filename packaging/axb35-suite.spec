@@ -63,6 +63,8 @@ cp dkms.conf             %{buildroot}/usr/src/ec_su_axb35-%{ekg_version}/
 # GUI binary
 install -m 0755 axb35_monitor_gui.py %{buildroot}/usr/local/bin/axb35-system-monitor
 
+install -Dm644 assets/axb35-suite.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
+
 # Desktop entry
 cat > %{buildroot}/usr/share/applications/axb35-suite.desktop << 'DESK'
 [Desktop Entry]
@@ -70,7 +72,7 @@ Type=Application
 Name=Axb35-monitor
 Comment=Fan control & system monitor for Sixunited AXB35-02
 Exec=/usr/local/bin/axb35-system-monitor
-Icon=utilities-system-monitor
+Icon=axb35-suite
 Terminal=false
 Categories=System;Monitor;
 StartupWMClass=Axb35-monitor
@@ -84,6 +86,7 @@ DESK
 /usr/src/ec_su_axb35-%{ekg_version}/src/
 /usr/local/bin/axb35-system-monitor
 /usr/share/applications/axb35-suite.desktop
+/usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
 
 %files -n axb35-suite-mok
 %defattr(-,root,root,-)
@@ -92,6 +95,7 @@ DESK
 /usr/src/ec_su_axb35-%{ekg_version}/src/
 /usr/local/bin/axb35-system-monitor
 /usr/share/applications/axb35-suite.desktop
+/usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
 
 # ─── Scriptlets: Standard ─────────────────────────────────
 %post

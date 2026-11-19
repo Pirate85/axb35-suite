@@ -3,6 +3,6 @@ Type=Application
 Name=Axb35-monitor
 Comment=Lüfterdrehzahlen & Temperatur anzeigen
 Exec=/usr/local/bin/axb35-system-monitor
-Icon=utilities-system-monitor
+Icon=axb35-suite
 Terminal=false
 Categories=System;Monitor;

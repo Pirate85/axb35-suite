@@ -56,6 +56,9 @@ build_deb() {
        "${staging}/usr/local/bin/axb35-system-monitor"
     chmod 0755 "${staging}/usr/local/bin/axb35-system-monitor"
 
+    install -Dm644 "${PROJECT_ROOT}/assets/axb35-suite.svg" \
+       "${staging}/usr/share/icons/hicolor/scalable/apps/axb35-suite.svg"
+
     # ── Desktop entry (template – postinst will also create it) ──
     cat > "${staging}/usr/share/applications/axb35-suite.desktop" << 'DESK'
 [Desktop Entry]
@@ -63,7 +66,7 @@ Type=Application
 Name=Axb35-monitor
 Comment=Fan control & system monitor for Sixunited AXB35-02
 Exec=/usr/local/bin/axb35-system-monitor
-Icon=utilities-system-monitor
+Icon=axb35-suite
 Terminal=false
 Categories=System;Monitor;
 StartupWMClass=Axb35-monitor

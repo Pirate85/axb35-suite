@@ -101,12 +101,13 @@ Type=Application
 Name=Axb35-monitor
 Comment=Fan control & system monitor for Sixunited AXB35-02
 Exec=/usr/local/bin/axb35-system-monitor
-Icon=utilities-system-monitor
+Icon=axb35-suite
 Terminal=false
 Categories=System;Monitor;
 StartupWMClass=Axb35-monitor
 EOF
 update-desktop-database /usr/share/applications 2>/dev/null || true
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
 
 echo ""
 echo "=== ⚠️  MOK Enrollment Required! ==="

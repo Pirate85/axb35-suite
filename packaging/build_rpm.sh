@@ -42,6 +42,7 @@ setup_build_tree() {
     cp "${REPO_ROOT}/src/ec_su_axb35.c"     "${src_dir}/src/"
     cp "${SCRIPT_DIR}/dkms.conf"            "${src_dir}/"
     cp "${REPO_ROOT}/python-gui/axb35_monitor_gui.py" "${src_dir}/axb35_monitor_gui.py"
+    cp -r "${REPO_ROOT}/assets" "${src_dir}/assets"
     
     # Create tarball (name must match Source0 in spec)
     tar -czf "${BUILD_TOP}/SOURCES/${PKG_NAME}-${PKG_VERSION}.tar.gz" \

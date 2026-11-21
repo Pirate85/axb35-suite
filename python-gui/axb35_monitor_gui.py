@@ -19,7 +19,7 @@ import threading
 import tkinter as tk
 
 # ─── Config-Pfad (Zoom, Fensterposition – überlebt Neustarts) ─────────────
-VERSION     = "1.2"
+VERSION     = "1.2.1"
 CONFIG_DIR  = os.path.expanduser("~/.config/axb35-monitor")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
@@ -366,17 +366,20 @@ def get_ext_disk_usage():
 
 
 def get_ext_nvme():
-    """Externe NVMe-SSD (USB) – Temperatur + Modell via smartctl. Liefert None wenn nicht angeschlossen."""
+    """Externe NVMe-SSD (USB) – Temperatur via smartctl ohne sudo. Liefert None wenn nicht angeschlossen."""
+    if not os.path.exists('/dev/sda'):
+        return None
+
     try:
         result = subprocess.run(
-            ['sudo', '-n', 'smartctl', '-a', '/dev/sda'],
-            capture_output=True, text=True, timeout=5
+            ['/usr/sbin/smartctl', '-a', '/dev/sda'],
+            capture_output=True, text=True, timeout=3
         )
-        if result.returncode != 0:
+        # smartctl gibt bei NVMe-USB-Bridges manchmal Bitmask-Exitcodes (z. B. 4) trotz gültiger Ausgabe zurück
+        if not result.stdout:
             return None
 
-        temp  = None
-        model = None
+        temp = None
         for line in result.stdout.splitlines():
             # "Temperature:                        36 Celsius"
             if 'Temperature:' in line and 'Sensor' not in line and 'Comp.' not in line:
@@ -385,14 +388,14 @@ def get_ext_nvme():
                     if p == 'Celsius':
                         temp = int(parts[i - 1])
                         break
-            # "Model Number:                       CT2000P310SSD2"
-            elif 'Model Number:' in line:
-                model = line.split(':', 1)[1].strip()
 
         if temp is None:
             return None
+
+        # Modellname ohne Root direkt aus sysfs lesen (falls vorhanden)
+        model = read_sysfs('/sys/block/sda/device/model')
         return {'temp': temp, 'model': model}
-    except (subprocess.TimeoutExpired, OSError):
+    except (subprocess.TimeoutExpired, OSError, ValueError):
         return None
 
 

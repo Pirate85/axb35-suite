@@ -1,7 +1,7 @@
 %global ekg_version 1.1
 %global debug_package %{nil}
 Name:           axb35-suite
-Version:        1.2
+Version:        1.2.1
 Release:        1%{?dist}
 Summary:        Fan control driver + system monitor for Sixunited AXB35-02 EC
 

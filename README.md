@@ -52,10 +52,10 @@ Pre-built `.deb` packages are available from the [GitHub Releases](https://githu
 
 ```bash
 # Standard variant (Secure Boot OFF):
-sudo apt install ./axb35-suite_1.2_amd64.deb
+sudo apt install ./axb35-suite_1.2.1_amd64.deb
 
 # Secure Boot (MOK) variant:
-sudo apt install ./axb35-suite-mok_1.2_amd64.deb
+sudo apt install ./axb35-suite-mok_1.2.1_amd64.deb
 sudo reboot   # → blue MOK screen → "Enroll MOK"
 ```
 
@@ -67,10 +67,10 @@ Pre-built `.rpm` packages are available from the [GitHub Releases](https://githu
 
 ```bash
 # Download from the release page, then install:
-sudo dnf install ./axb35-suite-1.2-1.fc.x86_64.rpm
+sudo dnf install ./axb35-suite-1.2.1-1.fc.x86_64.rpm
 
 # Secure Boot (MOK) variant:
-sudo dnf install ./axb35-suite-mok-1.2-1.fc.x86_64.rpm
+sudo dnf install ./axb35-suite-mok-1.2.1-1.fc.x86_64.rpm
 ```
 
 This handles DKMS setup, auto-load config, and desktop entry automatically – same as the `.deb`.
@@ -138,12 +138,12 @@ cp ./python-gui/axb35-monitor.desktop ~/.local/share/applications/
 
 > **Apply** = takes effect immediately + persists to `/etc/systemd/system/fancontrol.service`. If the service doesn't exist yet, it is created and enabled automatically.
 
-### Permissions & optional passwordless sudo
+### Permissions & non-root access
 - **Fan curves (`Config Panel → Apply`):** Both the `.deb` and `.rpm` packages install `/etc/udev/rules.d/99-ec-su-axb35.rules`, granting non-root write access to `/sys/devices/virtual/ec_su_axb35/fan*`. A password prompt only appears once when creating/enabling `fancontrol.service` for the first time.
-- **External USB SSD temperature (optional):** If you want live SMART temperatures for an external USB drive without a password prompt:
+- **External USB SSD temperature:** The monitor reads SMART data directly via `smartctl` (no sudo required). If you encounter permission errors on `/dev/sda`, add your user to the `disk` group:
 
 ```bash
-echo "$USER ALL=(root) NOPASSWD: /usr/sbin/smartctl" | sudo tee /etc/sudoers.d/axb35-smartctl
+sudo usermod -aG disk $USER   # then log out & back in
 ```
 
 ---
@@ -186,8 +186,8 @@ echo "$USER ALL=(root) NOPASSWD: /usr/sbin/smartctl" | sudo tee /etc/sudoers.d/a
 | Fans reset to default after reboot | Ensure module auto-load (step 2) **and** that you've clicked **Apply** at least once (creates `fancontrol.service`) |
 | Secure Boot blocks the module | Enroll the MOK key (`01_setup_dkms_mok.sh`) or disable Secure Boot in UEFI |
 | Kernel update breaks the driver | Only when installed manually without DKMS – with DKMS this won't happen |
-| GUI prompts for a password (Apply / ext. SSD temp) | Add the scoped sudoers rules shown above (optional) |
-| External SSD not detected | `smartctl -a /dev/sda`; check the device name on your system |
+| GUI prompts for a password (Apply) | Ensure udev rule is active: `cat /etc/udev/rules.d/99-ec-su-axb35.rules` |
+| External SSD not detected | `/usr/sbin/smartctl -a /dev/sda`; check device name & `sudo usermod -aG disk $USER` |
 
 ---
 
@@ -232,4 +232,4 @@ systemctl status fancontrol       # → not found
 
 ---
 
-*Last updated: 19.11.2026*
+*Last updated: 21.11.2026 — v1.2.1: ext. SSD temp without sudo (setcap)

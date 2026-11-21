@@ -28,14 +28,16 @@ echo "ec_su_axb35" > /etc/modules-load.d/ec_su_axb35.conf
 # Load module now (if kernel supports it)
 modprobe "$DKMS_MODULE" 2>/dev/null || echo "  Module will load at next boot."
 
-# 3) Sudoers rules (scoped, no general root)
-echo "[5/6] Setting up scoped sudoers rules..."
-mkdir -p /etc/sudoers.d
-cat > /etc/sudoers.d/axb35-smartctl << 'EOF'
-%users ALL=(root) NOPASSWD: /usr/sbin/smartctl
-EOF
-chmod 0440 /etc/sudoers.d/axb35-smartctl
+# 3) Permissions for non-root access (no sudo needed!)
+echo "[5/6] Setting up permissions..."
 
+# smartctl: grant capabilities directly (replaces old sudoers rule)
+if [ -x /usr/sbin/smartctl ]; then
+    setcap cap_sys_rawio,cap_sys_admin,cap_dac_override+ep /usr/sbin/smartctl 2>/dev/null || true
+fi
+
+# fanconfig: scoped sudo for Apply button (sysfs writes + systemctl)
+mkdir -p /etc/sudoers.d
 cat > /etc/sudoers.d/axb35-fanconfig << 'EOF'
 %users ALL=(root) NOPASSWD: /bin/sh, /usr/bin/systemctl
 EOF

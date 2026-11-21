@@ -12,7 +12,7 @@ case "$1" in
 
         echo "[2/4] Removing configuration files..."
         rm -f /etc/modules-load.d/ec_su_axb35.conf
-        rm -f /etc/sudoers.d/axb35-smartctl
+        setcap -r /usr/sbin/smartctl 2>/dev/null || true
         rm -f /etc/sudoers.d/axb35-fanconfig
         rm -f /etc/systemd/system/fancontrol.service
 

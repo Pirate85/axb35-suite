@@ -15,7 +15,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 BUILD_TMP="/tmp/ec-deb-build-$$"
 
 PKG_NAME="axb35-suite"
-PKG_VERSION="1.2"
+PKG_VERSION="1.2.1"
 ARCH="amd64"
 
 # ─── Farben ──────────────────────────────────────────────

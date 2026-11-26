@@ -52,10 +52,10 @@ Pre-built `.deb` packages are available from the [GitHub Releases](https://githu
 
 ```bash
 # Standard variant (Secure Boot OFF):
-sudo apt install ./axb35-suite_1.2.1_amd64.deb
+sudo apt install ./axb35-suite_1.2.2_amd64.deb
 
 # Secure Boot (MOK) variant:
-sudo apt install ./axb35-suite-mok_1.2.1_amd64.deb
+sudo apt install ./axb35-suite-mok_1.2_amd64.deb
 sudo reboot   # → blue MOK screen → "Enroll MOK"
 ```
 
@@ -67,10 +67,10 @@ Pre-built `.rpm` packages are available from the [GitHub Releases](https://githu
 
 ```bash
 # Download from the release page, then install:
-sudo dnf install ./axb35-suite-1.2.1-1.fc.x86_64.rpm
+sudo dnf install ./axb35-suite-1.2.2-1.fc.x86_64.rpm
 
 # Secure Boot (MOK) variant:
-sudo dnf install ./axb35-suite-mok-1.2.1-1.fc.x86_64.rpm
+sudo dnf install ./axb35-suite-mok-1.2-1.fc.x86_64.rpm
 ```
 
 This handles DKMS setup, auto-load config, and desktop entry automatically – same as the `.deb`.
@@ -232,4 +232,4 @@ systemctl status fancontrol       # → not found
 
 ---
 
-*Last updated: 21.11.2026 — v1.2.1: ext. SSD temp without sudo (setcap)
+*Last updated: 19.11.2026*

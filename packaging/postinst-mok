@@ -70,7 +70,7 @@ echo "[7/7] Creating fancontrol.service..."
 cat > /etc/systemd/system/fancontrol.service << 'EOF'
 [Unit]
 Description=EC AXB35 Fan Control (curves + mode)
-After=multi-user.target
+After=multi-user.target dkms.service
 ConditionPathExists=/sys/class/ec_su_axb35
 
 [Service]
@@ -101,6 +101,8 @@ cat > /etc/udev/rules.d/99-ec-su-axb35.rules << 'UDEV_EOF'
 SUBSYSTEM=="ec_su_axb35", ACTION=="add|change", RUN+="/bin/sh -c 'chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan*'"
 UDEV_EOF
 udevadm control --reload-rules 2>/dev/null || true
+# Externe USB-SSDs sofort ohne Reboot lesbar machen (99-axb35-ext-ssd.rules)
+udevadm trigger --subsystem-match=block --action=change 2>/dev/null || true
 chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan* 2>/dev/null || true
 
 desktop_file="/usr/share/applications/axb35-suite.desktop"

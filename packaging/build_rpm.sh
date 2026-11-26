@@ -14,7 +14,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 BUILD_TOP="/tmp/rpm-build-$$"
 
 PKG_NAME="axb35-suite"
-PKG_VERSION="1.2.1"
+PKG_VERSION="1.2.2"
 PKG_RELEASE="1"
 
 # ─── Farben ──────────────────────────────────────────────

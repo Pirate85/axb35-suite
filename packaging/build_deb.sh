@@ -15,7 +15,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 BUILD_TMP="/tmp/ec-deb-build-$$"
 
 PKG_NAME="axb35-suite"
-PKG_VERSION="1.2.1"
+PKG_VERSION="1.2.2"
 ARCH="amd64"
 
 # ─── Farben ──────────────────────────────────────────────
@@ -95,6 +95,38 @@ DESK
     cp "${SCRIPT_DIR}/prerm"   "${staging}/DEBIAN/prerm"
     cp "${SCRIPT_DIR}/postrm"  "${staging}/DEBIAN/postrm"
     chmod 0755 "${staging}/DEBIAN/prerm" "${staging}/DEBIAN/postrm"
+
+# ─── Verzeichnisse im Debian-Staging anlegen ──────────────────────────────
+mkdir -p "${staging}/etc/sudoers.d"
+mkdir -p "${staging}/etc/udev/rules.d"
+mkdir -p "${staging}/etc/apt/apt.conf.d"
+
+# 1. Sudoers-Regel (%sudo statt %wheel)
+cat << 'EOF' > "${staging}/etc/sudoers.d/axb35-fancontrol"
+%sudo ALL=(ALL) NOPASSWD: /bin/sh -c echo * > /sys/class/ec_su_axb35/*, /usr/bin/sh -c echo * > /sys/class/ec_su_axb35/*, /bin/sh -c cat > /etc/systemd/system/fancontrol.service *, /usr/bin/sh -c cat > /etc/systemd/system/fancontrol.service *
+EOF
+chmod 0440 "${staging}/etc/sudoers.d/axb35-fancontrol"
+
+# 2. Udev-Regel für externe USB-SSDs (plugdev unter Debian/Ubuntu)
+cat << 'EOF' > "${staging}/etc/udev/rules.d/99-axb35-ext-ssd.rules"
+SUBSYSTEM=="block", KERNEL=="sd*[!0-9]", SUBSYSTEMS=="usb", GROUP="plugdev", MODE="0660"
+EOF
+chmod 0644 "${staging}/etc/udev/rules.d/99-axb35-ext-ssd.rules"
+
+# 3. APT Post-Invoke Hook (erhält setcap bei smartmontools-Updates)
+cat << 'EOF' > "${staging}/etc/apt/apt.conf.d/99axb35-smartctl"
+DPkg::Post-Invoke { "if [ -x /usr/sbin/smartctl ] && [ -x /usr/sbin/setcap ]; then /usr/sbin/setcap cap_sys_rawio,cap_sys_admin+ep /usr/sbin/smartctl || true; fi"; };
+EOF
+chmod 0644 "${staging}/etc/apt/apt.conf.d/99axb35-smartctl"
+
+# ── DEBIAN/conffiles (Config-Dateien vor Überschreiben schützen) ─────────
+cat > "${staging}/DEBIAN/conffiles" << 'EOF'
+/etc/sudoers.d/axb35-fancontrol
+/etc/udev/rules.d/99-axb35-ext-ssd.rules
+/etc/apt/apt.conf.d/99axb35-smartctl
+EOF
+chmod 0644 "${staging}/DEBIAN/conffiles"
+
 
     # ── Build the .deb ──
     dpkg-deb --build --root-owner-group "$staging" "$out_file" 2>&1 | sed 's/^/       /'

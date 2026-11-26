@@ -1,7 +1,7 @@
 %global ekg_version 1.1
 %global debug_package %{nil}
 Name:           axb35-suite
-Version:        1.2.1
+Version:        1.2.2
 Release:        1%{?dist}
 Summary:        Fan control driver + system monitor for Sixunited AXB35-02 EC
 
@@ -253,7 +253,7 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Thu Nov 26 2026 Pirate85 <Pirate85@web.de> - 1.2.1-1
+* Thu Nov 26 2026 Pirate85 <Pirate85@web.de> - 1.2.2-1
 - Fix boot race on Fedora kernel updates: fancontrol.service now waits for dkms.service (After=multi-user.target dkms.service)
 - Ship /etc/sudoers.d/axb35-fancontrol in package (%wheel, NOPASSWD for fan curves + service file) – survives dnf upgrade/reinstall
 - Add udev rule 99-axb35-ext-ssd.rules: external USB SSDs get group wheel (0660), readable without root after plug-in

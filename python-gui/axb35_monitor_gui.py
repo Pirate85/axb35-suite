@@ -19,7 +19,7 @@ import threading
 import tkinter as tk
 
 # ─── Config-Pfad (Zoom, Fensterposition – überlebt Neustarts) ─────────────
-VERSION     = "1.2.1"
+VERSION     = "1.2.2"
 CONFIG_DIR  = os.path.expanduser("~/.config/axb35-monitor")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 

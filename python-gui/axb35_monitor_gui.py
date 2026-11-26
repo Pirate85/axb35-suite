@@ -916,7 +916,7 @@ class FanConfigWindow:
         lines = [
             "[Unit]",
             "Description=Set Strix Halo fan curves (managed by AXB35 Monitor)",
-            "After=multi-user.target",
+            "After=multi-user.target dkms.service",
             "",
             "[Service]",
             "Type=oneshot",

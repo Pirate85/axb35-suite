@@ -13,6 +13,7 @@ Requires:       dkms
 Requires:       kernel-devel
 Requires:       python3-tkinter
 Requires:       smartmontools
+Requires:       libcap
 Requires(pre):  systemd
 Recommends:     openssl
 
@@ -34,6 +35,7 @@ Requires:       dkms
 Requires:       kernel-devel
 Requires:       python3-tkinter
 Requires:       smartmontools
+Requires:       libcap
 Requires(pre):  systemd
 Recommends:     openssl
 
@@ -65,6 +67,29 @@ install -m 0755 axb35_monitor_gui.py %{buildroot}/usr/local/bin/axb35-system-mon
 
 install -Dm644 assets/axb35-suite.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
 
+# ─── Verzeichnisse im Buildroot anlegen ───────────────────────────────────
+mkdir -p "%{buildroot}/etc/sudoers.d"
+mkdir -p "%{buildroot}/etc/udev/rules.d"
+mkdir -p "%{buildroot}/etc/dnf/libdnf5-plugins/actions.d"
+
+# ─── 1. Sudoers-Regel (%wheel statt festem Usernamen) ─────────────────────
+cat << 'EOF' > "%{buildroot}/etc/sudoers.d/axb35-fancontrol"
+%wheel ALL=(ALL) NOPASSWD: /bin/sh -c echo * > /sys/class/ec_su_axb35/*, /usr/bin/sh -c echo * > /sys/class/ec_su_axb35/*, /bin/sh -c cat > /etc/systemd/system/fancontrol.service *, /usr/bin/sh -c cat > /etc/systemd/system/fancontrol.service *
+EOF
+chmod 0440 "%{buildroot}/etc/sudoers.d/axb35-fancontrol"
+
+# ─── 2. Udev-Regel für externe USB-SSDs (greift auch bei ID_BUS=ata/scsi) ──
+cat << 'EOF' > "%{buildroot}/etc/udev/rules.d/99-axb35-ext-ssd.rules"
+SUBSYSTEM=="block", KERNEL=="sd*[!0-9]", SUBSYSTEMS=="usb", GROUP="wheel", MODE="0660"
+EOF
+chmod 0644 "%{buildroot}/etc/udev/rules.d/99-axb35-ext-ssd.rules"
+
+# ─── 3. DNF5 Post-Transaction-Hook (erhält setcap bei smartmontools-Update) ─
+cat << 'EOF' > "%{buildroot}/etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions"
+post_transaction:smartmontools:in::/usr/sbin/setcap cap_sys_rawio,cap_sys_admin+ep /usr/sbin/smartctl
+EOF
+chmod 0644 "%{buildroot}/etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions"
+
 # Desktop entry
 cat > %{buildroot}/usr/share/applications/axb35-suite.desktop << 'DESK'
 [Desktop Entry]
@@ -87,6 +112,9 @@ DESK
 /usr/local/bin/axb35-system-monitor
 /usr/share/applications/axb35-suite.desktop
 /usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
+%attr(0440, root, root) %config(noreplace) /etc/sudoers.d/axb35-fancontrol
+%attr(0644, root, root) %config(noreplace) /etc/udev/rules.d/99-axb35-ext-ssd.rules
+%attr(0644, root, root) %config(noreplace) /etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions
 
 %files -n axb35-suite-mok
 %defattr(-,root,root,-)
@@ -96,6 +124,9 @@ DESK
 /usr/local/bin/axb35-system-monitor
 /usr/share/applications/axb35-suite.desktop
 /usr/share/icons/hicolor/scalable/apps/axb35-suite.svg
+%attr(0440, root, root) %config(noreplace) /etc/sudoers.d/axb35-fancontrol
+%attr(0644, root, root) %config(noreplace) /etc/udev/rules.d/99-axb35-ext-ssd.rules
+%attr(0644, root, root) %config(noreplace) /etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions
 
 # ─── Scriptlets: Standard ─────────────────────────────────
 %post
@@ -117,6 +148,17 @@ udevadm control --reload-rules 2>/dev/null || true
 chmod -R a+rw /sys/devices/virtual/ec_su_axb35/fan* 2>/dev/null || true
 systemctl daemon-reload 2>/dev/null || true
 
+# Capabilities auf smartctl setzen (falls installiert)
+if [ -x /usr/sbin/smartctl ] && [ -x /usr/sbin/setcap ]; then
+    /usr/sbin/setcap cap_sys_rawio,cap_sys_admin+ep /usr/sbin/smartctl || :
+fi
+
+# Udev-Regeln aktivieren, damit externe SSDs sofort ohne Reboot lesbar sind
+if [ -x /usr/bin/udevadm ]; then
+    /usr/bin/udevadm control --reload-rules || :
+    /usr/bin/udevadm trigger --subsystem-match=block --action=change || :
+fi
+
 echo "[axb35-suite] Install complete. Launch 'Axb35-monitor' from your app menu."
 
 %preun
@@ -135,6 +177,9 @@ if [ $1 -eq 0 ]; then
         rm -f /etc/systemd/system/fancontrol.service
     fi
     rm -f /etc/udev/rules.d/99-ec-su-axb35.rules
+    rm -f /etc/sudoers.d/axb35-fancontrol
+    rm -f /etc/udev/rules.d/99-axb35-ext-ssd.rules
+    rm -f /etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions
     udevadm control --reload-rules 2>/dev/null || true
     systemctl daemon-reload 2>/dev/null || true
 fi
@@ -173,6 +218,17 @@ echo ""
 echo "[axb35-suite-mok] ⚠️  Secure Boot: Reboot required to enroll MOK key."
 echo "                  At the blue MOK screen, select 'Enroll MOK'."
 echo ""
+# Capabilities auf smartctl setzen (falls installiert)
+if [ -x /usr/sbin/smartctl ] && [ -x /usr/sbin/setcap ]; then
+    /usr/sbin/setcap cap_sys_rawio,cap_sys_admin+ep /usr/sbin/smartctl || :
+fi
+
+# Udev-Regeln aktivieren, damit externe SSDs sofort ohne Reboot lesbar sind
+if [ -x /usr/bin/udevadm ]; then
+    /usr/bin/udevadm control --reload-rules || :
+    /usr/bin/udevadm trigger --subsystem-match=block --action=change || :
+fi
+
 echo "[axb35-suite-mok] Install complete. Launch 'Axb35-monitor' from your app menu."
 
 %preun -n axb35-suite-mok
@@ -189,11 +245,20 @@ if [ $1 -eq 0 ]; then
         rm -f /etc/systemd/system/fancontrol.service
     fi
     rm -f /etc/udev/rules.d/99-ec-su-axb35.rules
+    rm -f /etc/sudoers.d/axb35-fancontrol
+    rm -f /etc/udev/rules.d/99-axb35-ext-ssd.rules
+    rm -f /etc/dnf/libdnf5-plugins/actions.d/axb35-smartctl.actions
     udevadm control --reload-rules 2>/dev/null || true
     systemctl daemon-reload 2>/dev/null || true
 fi
 
 %changelog
+* Thu Nov 26 2026 Pirate85 <Pirate85@web.de> - 1.2.1-1
+- Fix boot race on Fedora kernel updates: fancontrol.service now waits for dkms.service (After=multi-user.target dkms.service)
+- Ship /etc/sudoers.d/axb35-fancontrol in package (%wheel, NOPASSWD for fan curves + service file) – survives dnf upgrade/reinstall
+- Add udev rule 99-axb35-ext-ssd.rules: external USB SSDs get group wheel (0660), readable without root after plug-in
+- Add DNF5 post-transaction hook to re-apply smartctl capabilities after smartmontools updates
+- Requires libcap; %post sets smartctl caps and triggers udev block events
 * Mon Nov 16 2026 Pirate85 <Pirate85@web.de> - 1.2-1
 - Initial RPM packaging (Fedora support)
 - GUI: CPU/GPU clock rate display in usage bars

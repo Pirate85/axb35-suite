@@ -55,7 +55,7 @@ Pre-built `.deb` packages are available from the [GitHub Releases](https://githu
 sudo apt install ./axb35-suite_1.2.2_amd64.deb
 
 # Secure Boot (MOK) variant:
-sudo apt install ./axb35-suite-mok_1.2_amd64.deb
+sudo apt install ./axb35-suite-mok_1.2.2_amd64.deb
 sudo reboot   # → blue MOK screen → "Enroll MOK"
 ```
 
